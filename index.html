@@ -2,7 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Kanji Radical Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanji Quiz</title>
+
 <style>
 body {
     font-family: Arial;
@@ -11,29 +13,50 @@ body {
     color: white;
     padding: 20px;
 }
+
 .card {
     background: #1e293b;
-    padding: 20px;
-    border-radius: 15px;
-    max-width: 400px;
+    padding: 25px;
+    border-radius: 20px;
+    max-width: 420px;
     margin: auto;
 }
+
+h2 {
+    font-size: 22px;
+}
+
 .kanji {
-    font-size: 70px;
+    font-size: 90px; /* TO hơn */
     margin: 20px;
 }
+
 button {
     width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    font-size: 16px;
-    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 18px; /* chữ to hơn */
+    border-radius: 10px;
     border: none;
+    background: #f1f5f9; /* sáng hơn */
+    color: black;
 }
-.correct { background: #22c55e; }
-.wrong { background: #ef4444; }
+
+button:active {
+    opacity: 0.8;
+}
+
+.correct { background: #22c55e !important; color: white; }
+.wrong { background: #ef4444 !important; color: white; }
+
+#result {
+    font-size: 18px;
+    margin: 10px;
+}
+
 .score {
     margin-top: 10px;
+    font-size: 16px;
 }
 </style>
 </head>
@@ -45,10 +68,12 @@ button {
     <div class="kanji" id="q"></div>
     <div id="answers"></div>
     <p id="result"></p>
+
     <div class="score">
-        Điểm: <span id="score">0</span> |
+        Điểm: <span id="score">0</span> | 
         Câu: <span id="total">0</span>
     </div>
+
     <button onclick="next()">Câu tiếp</button>
 </div>
 
