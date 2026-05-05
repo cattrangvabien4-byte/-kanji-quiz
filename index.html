@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanji Quiz</title>
+<title>Kanji Radical Quiz</title>
 
 <style>
 body {
@@ -13,7 +13,6 @@ body {
     color: white;
     padding: 20px;
 }
-
 .card {
     background: #1e293b;
     padding: 25px;
@@ -21,43 +20,22 @@ body {
     max-width: 420px;
     margin: auto;
 }
-
-h2 {
-    font-size: 22px;
-}
-
 .kanji {
-    font-size: 90px; /* TO hơn */
+    font-size: 90px;
     margin: 20px;
 }
-
 button {
     width: 100%;
     padding: 15px;
     margin: 10px 0;
-    font-size: 18px; /* chữ to hơn */
+    font-size: 18px;
     border-radius: 10px;
     border: none;
-    background: #f1f5f9; /* sáng hơn */
+    background: #f1f5f9;
     color: black;
 }
-
-button:active {
-    opacity: 0.8;
-}
-
 .correct { background: #22c55e !important; color: white; }
 .wrong { background: #ef4444 !important; color: white; }
-
-#result {
-    font-size: 18px;
-    margin: 10px;
-}
-
-.score {
-    margin-top: 10px;
-    font-size: 16px;
-}
 </style>
 </head>
 
@@ -69,31 +47,69 @@ button:active {
     <div id="answers"></div>
     <p id="result"></p>
 
-    <div class="score">
-        Điểm: <span id="score">0</span> | 
-        Câu: <span id="total">0</span>
-    </div>
-
-    <button onclick="next()">Câu tiếp</button>
+    <p>Điểm: <span id="score">0</span> | Câu: <span id="count">0</span>/30</p>
 </div>
 
 <script>
+// 🔥 50 bộ thủ
 const data = [
 ["人","người"],["女","phụ nữ"],["子","trẻ con"],["心","tim"],
 ["手","tay"],["目","mắt"],["口","miệng"],["耳","tai"],
 ["足","chân"],["水","nước"],["火","lửa"],["木","cây"],
-["金","tiền"],["土","đất"],["日","mặt trời"],["月","mặt trăng"],
+["金","kim loại"],["土","đất"],["日","mặt trời"],["月","mặt trăng"],
 ["言","nói"],["食","ăn"],["車","xe"],["門","cửa"],
-["力","sức"],["又","tay / lại"],["生","sống"],["田","ruộng"]
+["力","sức"],["又","lại"],["生","sống"],["田","ruộng"],
+["山","núi"],["川","sông"],["雨","mưa"],["石","đá"],
+["糸","sợi"],["貝","tiền vỏ sò"],["犬","chó"],["馬","ngựa"],
+["魚","cá"],["鳥","chim"],["虫","côn trùng"],["竹","tre"],
+["米","gạo"],["衣","áo"],["見","nhìn"],["走","chạy"],
+["青","xanh"],["白","trắng"],["赤","đỏ"],["黒","đen"],
+["音","âm thanh"],["花","hoa"],["草","cỏ"],["空","trời"],
+["気","khí"],["男","nam"]
 ];
 
-let current, score=0, total=0;
+let score=0, count=0;
+let current, last = null;
+let wrongQueue = [];
 
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+// 🔊 âm thanh
+function sound(type){
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+
+    if(type==="ok"){ o.frequency.value=800; }
+    else { o.frequency.value=200; }
+
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.3);
+}
+
+// chọn câu hỏi
+function getQuestion(){
+    if(wrongQueue.length && Math.random()<0.6){
+        return wrongQueue[Math.floor(Math.random()*wrongQueue.length)];
+    }
+
+    let q;
+    do {
+        q = data[Math.floor(Math.random()*data.length)];
+    } while(q === last);
+
+    last = q;
+    return q;
+}
 
 function next(){
+    if(count>=30){
+        if(confirm("Bạn đã xong 30 câu. Học tiếp không?")){
+            count=0; score=0;
+        } else return;
+    }
+
     document.getElementById("result").innerText="";
-    current = data[Math.floor(Math.random()*data.length)];
+    current = getQuestion();
     document.getElementById("q").innerText = current[0];
 
     let opts=[current[1]];
@@ -102,7 +118,7 @@ function next(){
         if(!opts.includes(r)) opts.push(r);
     }
 
-    opts = shuffle(opts);
+    opts.sort(()=>Math.random()-0.5);
 
     let html="";
     opts.forEach(o=>{
@@ -113,18 +129,23 @@ function next(){
 }
 
 function check(btn, ans){
-    total++;
+    count++;
     if(ans===current[1]){
         score++;
         btn.classList.add("correct");
         document.getElementById("result").innerText="✅ Đúng";
+        sound("ok");
     } else {
         btn.classList.add("wrong");
         document.getElementById("result").innerText="❌ Sai: "+current[1];
+        sound("fail");
+        wrongQueue.push(current); // thêm vào hàng ôn
     }
 
     document.getElementById("score").innerText = score;
-    document.getElementById("total").innerText = total;
+    document.getElementById("count").innerText = count;
+
+    setTimeout(next, 800);
 }
 
 next();
