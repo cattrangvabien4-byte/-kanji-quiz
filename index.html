@@ -3,231 +3,270 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanji App</title>
+<title>Kanji Pro App</title>
 
 <style>
-body {
-  font-family: Arial;
+body{
+  margin:0;
+  font-family:Arial;
   background:#0f172a;
   color:white;
   text-align:center;
 }
 
-.card {
-  background:#1e293b;
-  padding:20px;
-  border-radius:20px;
+.card{
   max-width:420px;
-  margin:30px auto;
+  margin:40px auto;
+  background:#1e293b;
+  padding:25px;
+  border-radius:20px;
 }
 
-.kanji {
-  font-size:80px;
-  margin:20px;
+h1{margin-bottom:20px}
+
+.kanji{
+  font-size:90px;
+  margin:20px 0;
 }
 
-button {
+button{
   width:100%;
   padding:14px;
   margin:8px 0;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   font-size:18px;
 }
 
-.correct { background:#22c55e; color:white; }
-.wrong { background:#ef4444; color:white; }
+.btn{background:#e5e7eb;color:#1e293b}
+.correct{background:#22c55e;color:white}
+.wrong{background:#ef4444;color:white}
 
-.hide { display:none; }
+input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  margin-top:10px;
+  font-size:18px;
+}
+
+.small{opacity:0.7;margin-top:10px}
 </style>
 </head>
 
 <body>
 
-<!-- MENU -->
 <div class="card" id="menu">
-  <h2>Kanji App</h2>
-  <button onclick="startLearn()">📚 Học 50 bộ thủ</button>
-  <button onclick="startQuiz()">🎮 Trắc nghiệm</button>
+<h1>Kanji Pro</h1>
+
+<button class="btn" onclick="start(1)">Level 1 - Kanji → Nghĩa</button>
+<button class="btn" onclick="start(2)">Level 2 - Nghĩa → Kanji</button>
+<button class="btn" onclick="start(3)">Level 3 - Gõ nghĩa</button>
+<button class="btn" onclick="start(4)">Level 4 - Gõ Kanji</button>
+
+<p class="small" id="best"></p>
 </div>
 
-<!-- HỌC -->
-<div class="card hide" id="learn">
-  <h2>Học bộ thủ</h2>
-  <div class="kanji" id="learnKanji"></div>
-  <div id="learnMean"></div>
-  <button onclick="nextLearn()">Tiếp</button>
-  <button onclick="backMenu()">Quay lại</button>
-</div>
+<div class="card" id="quiz" style="display:none">
+<h2 id="title">Quiz</h2>
+<div class="kanji" id="kanji"></div>
 
-<!-- QUIZ -->
-<div class="card hide" id="quiz">
-  <h2>Kanji Quiz</h2>
-  <div class="kanji" id="qKanji"></div>
+<div id="answers"></div>
 
-  <div id="answers"></div>
+<p id="result"></p>
+<p id="score">0/0</p>
 
-  <p id="result"></p>
-  <p id="score"></p>
-</div>
-
-<!-- RESULT -->
-<div class="card hide" id="end">
-  <h2>Kết thúc</h2>
-  <p id="final"></p>
-  <button onclick="retryWrong()">Làm lại câu sai</button>
-  <button onclick="startQuiz()">Chơi lại</button>
-  <button onclick="backMenu()">Menu</button>
+<button class="btn" onclick="back()">🏠 Menu</button>
 </div>
 
 <script>
 
-// ===== DATA 50 BỘ THỦ =====
-let fullData = [
+// ===== DATA (50 bộ thủ) =====
+let baseData = [
 ["人","người"],["女","phụ nữ"],["子","trẻ con"],["心","tim"],
 ["手","tay"],["目","mắt"],["口","miệng"],["耳","tai"],
 ["足","chân"],["水","nước"],["火","lửa"],["木","cây"],
 ["金","tiền"],["土","đất"],["日","mặt trời"],["月","mặt trăng"],
 ["言","nói"],["食","ăn"],["車","xe"],["門","cửa"],
-["力","sức"],["又","tay / lại"],["生","sống"],["田","ruộng"],
-["山","núi"],["川","sông"],["空","trời"],["雨","mưa"],
-["石","đá"],["花","hoa"],["草","cỏ"],["虫","côn trùng"],
-["犬","chó"],["魚","cá"],["鳥","chim"],["馬","ngựa"],
-["牛","bò"],["羊","cừu"],["貝","sò"],["竹","tre"],
-["糸","sợi"],["衣","áo"],["見","nhìn"],["走","chạy"],
-["立","đứng"],["休","nghỉ"],["入","vào"],["出","ra"],
-["上","trên"],["下","dưới"]
+["力","sức"],["又","lại"],["生","sống"],["田","ruộng"],
+["雨","mưa"],["山","núi"],["川","sông"],["石","đá"],
+["花","hoa"],["虫","côn trùng"],["犬","chó"],["魚","cá"],
+["鳥","chim"],["米","gạo"],["竹","tre"],["糸","sợi"],
+["貝","sò"],["王","vua"],["玉","ngọc"],["気","khí"],
+["学","học"],["校","trường"],["先","trước"],["年","năm"],
+["時","giờ"],["上","trên"],["下","dưới"],["中","giữa"]
 ];
 
-// ===== ÂM THANH =====
-function sound(ok){
-  let ctx = new (window.AudioContext || window.webkitAudioContext)();
-  let o = ctx.createOscillator();
-  o.type="sine";
-  o.frequency.value = ok ? 600 : 200;
-  o.connect(ctx.destination);
-  o.start();
-  setTimeout(()=>o.stop(),150);
-}
+let data = [...baseData];
 
-// ===== CHUNG =====
-function show(id){
-  ["menu","learn","quiz","end"].forEach(x=>{
-    document.getElementById(x).classList.add("hide");
-  });
-  document.getElementById(id).classList.remove("hide");
-}
+// ===== STATE =====
+let mode = 1;
+let score = 0;
+let count = 0;
+let current;
+let wrong = [];
+let last = null;
 
-// ===== HỌC =====
-let learnIndex=0;
+// ===== START =====
+function start(lv){
+  mode = lv;
+  score = 0;
+  count = 0;
+  wrong = [];
+  data = [...baseData];
 
-function startLearn(){
-  show("learn");
-  learnIndex=0;
-  nextLearn();
-}
-
-function nextLearn(){
-  let item = fullData[learnIndex % fullData.length];
-  document.getElementById("learnKanji").innerText=item[0];
-  document.getElementById("learnMean").innerText=item[1];
-  learnIndex++;
-}
-
-// ===== QUIZ =====
-let data=[], current, score=0, count=0, wrongList=[], lastKanji=null;
-
-function startQuiz(){
   show("quiz");
-  data=[...fullData];
-  score=0;
-  count=0;
-  wrongList=[];
   next();
 }
 
+// ===== NEXT =====
 function next(){
-  if(count>=30){
-    endGame();
+  if(count >= 30){
+    end();
     return;
   }
 
-  // tránh lặp liên tiếp
+  let item;
   do{
-    current = data[Math.floor(Math.random()*data.length)];
-  }while(current[0]===lastKanji);
+    item = data[Math.floor(Math.random()*data.length)];
+  }while(item === last);
 
-  lastKanji=current[0];
+  last = item;
+  current = item;
 
-  document.getElementById("qKanji").innerText=current[0];
   document.getElementById("result").innerText="";
+  document.getElementById("score").innerText=score+"/"+count;
+  document.getElementById("answers").innerHTML="";
 
-  let answers=[current[1]];
+  if(mode==1) renderMCQ(current[0],current[1],true);
+  if(mode==2) renderMCQ(current[1],current[0],false);
+  if(mode==3) renderInput(current[0],current[1]);
+  if(mode==4) renderInput(current[1],current[0]);
+}
 
-  while(answers.length<4){
-    let r = fullData[Math.floor(Math.random()*fullData.length)][1];
-    if(!answers.includes(r)) answers.push(r);
+// ===== MCQ =====
+function renderMCQ(q,correct,isKanji){
+  document.getElementById("kanji").innerText=q;
+
+  let arr=[correct];
+  while(arr.length<4){
+    let r=data[Math.floor(Math.random()*data.length)][isKanji?1:0];
+    if(!arr.includes(r)) arr.push(r);
   }
 
-  answers.sort(()=>Math.random()-0.5);
+  arr.sort(()=>Math.random()-0.5);
 
   let html="";
-  answers.forEach(a=>{
-    html += `<button onclick="check(this,'${a}')">${a}</button>`;
+  arr.forEach(a=>{
+    html+=`<button class="btn" onclick="checkMCQ(this,'${a}')">${a}</button>`;
   });
 
   document.getElementById("answers").innerHTML=html;
 }
 
-// ===== CHECK =====
-function check(btn, ans){
+// ===== INPUT =====
+function renderInput(q){
+  document.getElementById("kanji").innerText=q;
+
+  document.getElementById("answers").innerHTML=`
+    <input id="input" placeholder="Nhập đáp án">
+    <button class="btn" onclick="checkInput()">OK</button>
+  `;
+}
+
+// ===== CHECK MCQ =====
+function checkMCQ(btn,ans){
   count++;
 
-  if(ans===current[1]){
+  let correct = current[mode==1?1:0];
+
+  if(ans==correct){
     score++;
     btn.classList.add("correct");
-    document.getElementById("result").innerText="✅ Đúng";
-    sound(true);
   }else{
     btn.classList.add("wrong");
-    document.getElementById("result").innerText="❌ Sai: " + current[1];
-    sound(false);
-    wrongList.push(current);
+    wrong.push(current);
+    data.push(current); // tăng tần suất lặp lại
+  }
 
-    // tăng tần suất xuất hiện lại
-    data.push(current);
+  save();
+
+  setTimeout(next,600);
+}
+
+// ===== CHECK INPUT =====
+function normalize(s){
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+}
+
+function checkInput(){
+  let val=document.getElementById("input").value.trim();
+  count++;
+
+  let correct=current[mode==3?1:0];
+  let ok = mode==3 ? normalize(val)==normalize(correct) : val==correct;
+
+  if(ok){
+    score++;
+    document.getElementById("result").innerText="✅ Đúng";
+  }else{
+    document.getElementById("result").innerText="❌ "+correct;
+    wrong.push(current);
     data.push(current);
   }
 
-  document.getElementById("score").innerText = score + "/" + count;
+  save();
 
-  setTimeout(next, 800);
+  setTimeout(next,800);
 }
 
 // ===== END =====
-function endGame(){
-  show("end");
-  document.getElementById("final").innerText = "Kết quả: " + score + "/30";
+function end(){
+  document.getElementById("kanji").innerText="🎉 Kết thúc";
+  document.getElementById("answers").innerHTML=`
+    <p>Điểm: ${score}/30</p>
+    <button class="btn" onclick="retry()">🔁 Học lại sai</button>
+    <button class="btn" onclick="back()">🏠 Menu</button>
+  `;
 }
 
 // ===== RETRY =====
-function retryWrong(){
-  if(wrongList.length===0){
+function retry(){
+  if(wrong.length==0){
     alert("Không có câu sai");
     return;
   }
-  data=[...wrongList];
+
+  data=[...wrong];
   score=0;
   count=0;
-  wrongList=[];
-  show("quiz");
+  wrong=[];
   next();
 }
 
-// ===== BACK =====
-function backMenu(){
+// ===== MENU =====
+function back(){
   show("menu");
+  load();
 }
+
+function show(id){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("quiz").style.display="none";
+  document.getElementById(id).style.display="block";
+}
+
+// ===== SAVE =====
+function save(){
+  localStorage.setItem("best",Math.max(score,Number(localStorage.getItem("best")||0)));
+}
+
+function load(){
+  document.getElementById("best").innerText="🏆 Best: "+(localStorage.getItem("best")||0);
+}
+
+load();
 
 </script>
 
