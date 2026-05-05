@@ -38,7 +38,27 @@ button { width:100%; padding:12px; margin:8px 0; font-size:16px; border-radius:8
 <div id="answers"></div>
 <p id="result"></p>
 <p id="score"></p>
-<button onclick="next()">Câu tiếp</button>
+function check(btn,ans){
+count++;
+
+if(ans===current[1]){
+    score++;
+    btn.classList.add("correct");
+    document.getElementById("result").innerText="✅ Đúng";
+    sound(true);
+} else {
+    btn.classList.add("wrong");
+    document.getElementById("result").innerText="❌ Sai: "+current[1];
+    sound(false);
+    wrongList.push(current);
+}
+
+// update điểm
+document.getElementById("score").innerText=`${score} / ${count}`;
+
+// ⏳ tự chuyển câu sau 0.8 giây
+setTimeout(next, 800);
+}
 <button onclick="backMenu()">🏠 Menu</button>
 </div>
 
