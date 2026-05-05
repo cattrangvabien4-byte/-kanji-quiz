@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Kanji Radical Quiz</title>
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #0f172a;
+    color: white;
+    padding: 20px;
+}
+.card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 400px;
+    margin: auto;
+}
+.kanji {
+    font-size: 70px;
+    margin: 20px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+}
+.correct { background: #22c55e; }
+.wrong { background: #ef4444; }
+.score {
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Kanji Radical Quiz</h2>
+    <div class="kanji" id="q"></div>
+    <div id="answers"></div>
+    <p id="result"></p>
+    <div class="score">
+        Điểm: <span id="score">0</span> |
+        Câu: <span id="total">0</span>
+    </div>
+    <button onclick="next()">Câu tiếp</button>
+</div>
+
+<script>
+const data = [
+["人","người"],["女","phụ nữ"],["子","trẻ con"],["心","tim"],
+["手","tay"],["目","mắt"],["口","miệng"],["耳","tai"],
+["足","chân"],["水","nước"],["火","lửa"],["木","cây"],
+["金","tiền"],["土","đất"],["日","mặt trời"],["月","mặt trăng"],
+["言","nói"],["食","ăn"],["車","xe"],["門","cửa"],
+["力","sức"],["又","tay / lại"],["生","sống"],["田","ruộng"]
+];
+
+let current, score=0, total=0;
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+function next(){
+    document.getElementById("result").innerText="";
+    current = data[Math.floor(Math.random()*data.length)];
+    document.getElementById("q").innerText = current[0];
+
+    let opts=[current[1]];
+    while(opts.length<4){
+        let r = data[Math.floor(Math.random()*data.length)][1];
+        if(!opts.includes(r)) opts.push(r);
+    }
+
+    opts = shuffle(opts);
+
+    let html="";
+    opts.forEach(o=>{
+        html+=`<button onclick="check(this,'${o}')">${o}</button>`;
+    });
+
+    document.getElementById("answers").innerHTML = html;
+}
+
+function check(btn, ans){
+    total++;
+    if(ans===current[1]){
+        score++;
+        btn.classList.add("correct");
+        document.getElementById("result").innerText="✅ Đúng";
+    } else {
+        btn.classList.add("wrong");
+        document.getElementById("result").innerText="❌ Sai: "+current[1];
+    }
+
+    document.getElementById("score").innerText = score;
+    document.getElementById("total").innerText = total;
+}
+
+next();
+</script>
+
+</body>
+</html>
